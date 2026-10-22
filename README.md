@@ -45,3 +45,7 @@ node tests/gif-worker.test.mjs
 ```
 
 测试无需 npm 依赖；GIF 像素检查需要 Python Pillow。编码器已验证 16 个 GIF、24 个解码帧、LZW 字典扩展和重置、差异帧、透明度扁平化、时间及循环信息。浏览器实际导出的示例为 960×640、60 帧、3000 ms，确认帧间像素变化和无限循环。
+
+## Logo
+
+产品标志已用于页眉、浏览器标签和导出窗口。矢量文件及透明背景 PNG 见 [brand/README.md](brand/README.md)。
