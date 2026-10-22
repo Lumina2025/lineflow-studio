@@ -2,3 +2,5 @@
 @media(min-width:851px){body{overflow:hidden}.workspace{height:calc(100vh - 76px);min-height:0}.leftbar,.rightbar{overflow-y:auto;scrollbar-width:thin;scrollbar-color:#d5dcd5 transparent}.editor{min-height:0}.canvas-stage{height:auto;max-height:none;min-height:0}.leftbar{gap:22px}.paths-section{min-height:180px}.quick-guide{flex-shrink:0}.preview-bar{height:66px}.editor-footnote{margin-bottom:14px}.canvas-toolbar{height:59px}}
 
 .brand-icon{display:block;flex:none;padding:0;object-fit:contain}.dialog-icon img{display:block;width:44px;height:44px;border-radius:11px}
+
+.brand{font-weight:600;letter-spacing:-.8px}

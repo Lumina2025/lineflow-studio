@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f3ef"><meta name="description" content="给流程图加上流动的箭头、光点和虚线，在浏览器里导出循环 GIF。"><title>Lineflow · 让连线流动起来</title><link rel="icon" type="image/svg+xml" href="./assets/lineflow-mark.svg"><link rel="stylesheet" href="./style.css"></head>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f3ef"><meta name="description" content="给流程图加上流动的箭头、光点和虚线，在浏览器里导出循环 GIF。"><title>Lineflow · 让连线流动起来</title><link rel="icon" type="image/svg+xml" href="./assets/lineflow-mark-v2.svg"><link rel="stylesheet" href="./style.css"></head>
 <body>
 <header class="topbar">
-  <a class="brand" href="./" aria-label="Lineflow 首页"><img class="brand-icon" src="./assets/lineflow-mark.svg" width="34" height="34" alt="">lineflow<span class="brand-label">动线工作室</span></a>
+  <a class="brand" href="./" aria-label="Lineflow 首页"><img class="brand-icon" src="./assets/lineflow-mark-v2.svg" width="34" height="34" alt="">lineflow<span class="brand-label">动线工作室</span></a>
   <div class="project-meta"><input id="projectName" aria-label="项目名称" value="Agent 工作流"><span id="saveStatus"><i></i> 已保存在此浏览器</span></div>
   <div class="header-actions"><button id="saveProject" class="quiet">保存工程</button><button id="openProject" class="quiet">打开工程</button><button id="exportTop" class="primary">导出 GIF <span>↗</span></button></div>
 </header>
@@ -57,7 +57,7 @@
 </aside>
 </div>
 <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden><input id="projectInput" type="file" accept=".json,application/json" hidden>
-<dialog id="exportDialog"><div class="dialog-icon"><img src="./assets/lineflow-mark.svg" width="44" height="44" alt=""></div><h2 id="exportTitle">正在制作你的 GIF</h2><p id="exportDetail">准备画布…</p><progress id="exportProgress" max="100" value="0"></progress><p class="dialog-small">请保持页面打开。图片不会上传到服务器。</p><div id="exportResult" hidden><img id="exportPreview" alt="导出的 GIF 预览"><a id="downloadGif" class="primary" download="lineflow.gif">下载 GIF ↓</a></div><button id="cancelExport" class="full-button">取消</button></dialog>
+<dialog id="exportDialog"><div class="dialog-icon"><img src="./assets/lineflow-mark-v2.svg" width="44" height="44" alt=""></div><h2 id="exportTitle">正在制作你的 GIF</h2><p id="exportDetail">准备画布…</p><progress id="exportProgress" max="100" value="0"></progress><p class="dialog-small">请保持页面打开。图片不会上传到服务器。</p><div id="exportResult" hidden><img id="exportPreview" alt="导出的 GIF 预览"><a id="downloadGif" class="primary" download="lineflow.gif">下载 GIF ↓</a></div><button id="cancelExport" class="full-button">取消</button></dialog>
 <dialog id="replaceDialog"><h2>替换当前画布？</h2><p>当前路径会被清空。可先「保存工程」，或替换后用撤销恢复。</p><div class="dialog-actions"><button id="keepCanvas">取消</button><button id="confirmReplace" class="primary">替换画布</button></div></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 <script type="module" src="./app.js"></script>

@@ -1,12 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 128" role="img" aria-labelledby="title desc">
   <title id="title">Lineflow 动线工作室</title>
-  <desc id="desc">深蓝圆角方形内的流动箭头标志，右侧为 lineflow 字标。</desc>
+  <desc id="desc">深蓝圆角方形内的两条并行流线，右侧为 lineflow 字标。</desc>
   <g transform="translate(10 10) scale(1.6875)">
     <rect width="64" height="64" rx="15" fill="#173448"/>
-    <path d="M15 42h8c5 0 7-3 7-8v-4c0-5 3-8 8-8h10" fill="none" stroke="#F47B50" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="m42 16 7 6-7 6" fill="none" stroke="#F47B50" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="15" cy="42" r="3.7" fill="#F5CF95"/>
+    <path d="M14 23c12 0 10 16 22 16 6 0 8-5 14-5" fill="none" stroke="#F7EFE0" stroke-width="4.6" stroke-linecap="round"/>
+    <path d="M14 34c12 0 10 16 22 16 6 0 8-5 14-5" fill="none" stroke="#F47B50" stroke-width="4.6" stroke-linecap="round"/>
   </g>
-  <text x="140" y="82" fill="#173448" font-family="Avenir Next, Nunito Sans, Helvetica Neue, sans-serif" font-size="66" font-weight="750" letter-spacing="-3.5">lineflow</text>
-  <text x="145" y="110" fill="#7D8B8D" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="15" font-weight="500" letter-spacing="3">动线工作室</text>
+  <text x="140" y="81" fill="#173448" font-family="Avenir Next, Helvetica Neue, sans-serif" font-size="63" font-weight="600" letter-spacing="-2.8">lineflow</text>
+  <text x="143" y="110" fill="#7D8B8D" font-family="PingFang SC, Microsoft YaHei, sans-serif" font-size="14" font-weight="500" letter-spacing="3">动线工作室</text>
 </svg>

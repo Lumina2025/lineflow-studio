@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
   <title id="title">Lineflow</title>
-  <desc id="desc">一条暖橙色的线从圆点出发，转弯后向右流动。</desc>
+  <desc id="desc">两条并行弯曲的浅色与橙色流线。</desc>
   <rect width="64" height="64" rx="15" fill="#173448"/>
-  <path d="M15 42h8c5 0 7-3 7-8v-4c0-5 3-8 8-8h10" fill="none" stroke="#F47B50" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="m42 16 7 6-7 6" fill="none" stroke="#F47B50" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="15" cy="42" r="3.7" fill="#F5CF95"/>
+  <path d="M14 23c12 0 10 16 22 16 6 0 8-5 14-5" fill="none" stroke="#F7EFE0" stroke-width="4.6" stroke-linecap="round"/>
+  <path d="M14 34c12 0 10 16 22 16 6 0 8-5 14-5" fill="none" stroke="#F47B50" stroke-width="4.6" stroke-linecap="round"/>
 </svg>
