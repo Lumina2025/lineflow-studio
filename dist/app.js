@@ -1,10 +1,11 @@
 import {renderScene,getPathSamples,makeDemoState} from './renderer.js';
+import {detectFlowPaths} from './auto-detect.js';
 const $=id=>document.getElementById(id), canvas=$('canvas'), ctx=canvas.getContext('2d'), stage=$('stage');
 const clone=value=>Array.isArray(value)?value.map(clone):value&&typeof value==='object'?Object.fromEntries(Object.entries(value).map(([k,v])=>[k,clone(v)])):value;
 const uid=()=>globalThis.crypto?.randomUUID?.()||`path-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 let state=makeDemoState(), selectedId=state.paths[0]?.id, backgroundImage=null, mode='select', draft=null, drag=null;
 let undoStack=[],redoStack=[],playing=true,phase=0,lastTime=performance.now(),scale=1,zoom=1,hideHandles=false;
-let restoring=false,historyQueue=Promise.resolve();
+let restoring=false,detecting=false,historyQueue=Promise.resolve();
 let saveTimer,toastTimer,restoreToken=0,exportWorker=null,exportCancelled=false,resultUrl=null,pendingReplace=null;
 const STORE='lineflow-project-v1';
 function toast(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),3500)}
@@ -20,7 +21,7 @@ function validateProject(raw){
   if(raw.backgroundData?.length>28000000)throw Error('工程底图过大');
   const def=makeDemoState();const numeric=(v,a,b,d)=>Number.isFinite(Number(v))?Math.max(a,Math.min(b,Number(v))):d;
   return {version:1,width:Math.round(raw.width),height:Math.round(raw.height),name:String(raw.name||'未命名流程图').slice(0,80),demo:!!raw.demo,backgroundColor:safeColor(raw.backgroundColor,'#ffffff'),backgroundData:raw.backgroundData||null,
-    paths:raw.paths.map((p,i)=>{if(!p||!Array.isArray(p.points)||p.points.length<2||p.points.length>1000||p.points.some(q=>!q||!Number.isFinite(q.x)||!Number.isFinite(q.y)||Math.abs(q.x)>12000||Math.abs(q.y)>12000))throw Error(`第 ${i+1} 条路径数据无效`);return {id:uid(),name:String(p.name||`路径 ${i+1}`).slice(0,50),points:p.points.map(q=>({x:q.x,y:q.y})),smooth:!!p.smooth,color:safeColor(p.color),width:numeric(p.width,1,10,3),effect:['arrows','dots','dashes'].includes(p.effect)?p.effect:'arrows',direction:p.direction===-1?-1:1,visible:p.visible!==false}}),
+    paths:raw.paths.map((p,i)=>{if(!p||!Array.isArray(p.points)||p.points.length<2||p.points.length>1000||p.points.some(q=>!q||!Number.isFinite(q.x)||!Number.isFinite(q.y)||Math.abs(q.x)>12000||Math.abs(q.y)>12000))throw Error(`第 ${i+1} 条路径数据无效`);return {id:uid(),name:String(p.name||`路径 ${i+1}`).slice(0,50),points:p.points.map(q=>({x:q.x,y:q.y})),smooth:!!p.smooth,color:safeColor(p.color),width:numeric(p.width,1,10,3),effect:['arrows','dots','dashes'].includes(p.effect)?p.effect:'arrows',direction:p.direction===-1?-1:1,visible:p.visible!==false,origin:p.origin==='auto'?'auto':'manual'}}),
     settings:{speed:Math.round(numeric(raw.settings?.speed,1,8,3)),spacing:numeric(raw.settings?.spacing,24,180,80),glow:!!raw.settings?.glow,showBase:raw.settings?.showBase!==false,loopSeconds:[2,3,4,6].includes(raw.settings?.loopSeconds)?raw.settings.loopSeconds:3},
     export:{width:[640,960,1200,1600].includes(raw.export?.width)?raw.export.width:960,fps:[12,20,25].includes(raw.export?.fps)?raw.export.fps:20,duration:[2,3,4,6].includes(raw.export?.duration)?raw.export.duration:3}};
 }
@@ -39,7 +40,7 @@ function exportDimensions(){let w=Number(state.export.width),h=Math.round(w*stat
 function updateExportInfo(){const {width,height}=exportDimensions();$('exportEstimate').textContent=`${width} × ${height} px · ${state.export.duration*state.export.fps} 帧 · 无限循环`;$('loopLabel').textContent=`${state.settings.loopSeconds} 秒无缝循环`}
 function syncAll(){
   $('projectName').value=state.name;$('speed').value=state.settings.speed;$('speedValue').textContent=`${state.settings.speed}×`;$('spacing').value=state.settings.spacing;$('spacingValue').textContent=`${state.settings.spacing} px`;$('glow').checked=state.settings.glow;$('showBase').checked=state.settings.showBase;$('exportWidth').value=state.export.width;$('duration').value=state.export.duration;$('fps').value=state.export.fps;
-  $('sourceInfo').textContent=`${state.demo?'当前使用示例画布':state.backgroundData?'已导入图片':'空白画布'} · ${state.width} × ${state.height}`;renderPaths();syncSelection();updateExportInfo();updateHistory();syncMode();
+  $('sourceInfo').textContent=`${state.demo?'当前使用示例画布':state.backgroundData?'已导入图片':'空白画布'} · ${state.width} × ${state.height}`;const autoCount=state.paths.filter(p=>p.origin==='auto').length;$('autoDetect').hidden=!state.backgroundData;$('autoDetect').disabled=detecting;$('detectStatus').hidden=!state.backgroundData;$('detectStatus').textContent=detecting?'正在识别图片中的箭头…':autoCount?`已识别 ${autoCount} 条流动路径 · 可逐条修正`:'未识别到箭头时，可手动描绘路径';renderPaths();syncSelection();updateExportInfo();updateHistory();syncMode();
 }
 function resize(){const availableW=stage.clientWidth-58,availableH=stage.clientHeight-58;if(availableW<1||availableH<1)return;const fit=Math.min(availableW/state.width,availableH/state.height);scale=Math.max(.02,fit*zoom);const w=Math.round(state.width*scale),h=Math.round(state.height*scale),dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=`${w}px`;canvas.style.height=`${h}px`;$('canvasWrap').style.width=`${w}px`;$('canvasWrap').style.height=`${h}px`;stage.style.justifyContent=w>availableW?'flex-start':'center';stage.style.alignItems=h>availableH?'flex-start':'center';$('zoomLabel').textContent=`${Math.round(scale*100)}%`}
 function draw(){ctx.setTransform(canvas.width/state.width,0,0,canvas.height/state.height,0,0);renderScene(ctx,state,phase,{backgroundImage,editing:!hideHandles,selectedId,draft});}
@@ -47,7 +48,7 @@ function frame(time){const elapsed=Math.min((time-lastTime)/1000,.1);lastTime=ti
 function setMode(value){if(draft&&value!=='draw'){draft=null}mode=value;syncMode()}
 function syncMode(){$('selectTool').classList.toggle('active',mode==='select');$('drawTool').classList.toggle('active',mode==='draw');stage.classList.toggle('drawing',mode==='draw');$('drawNotice').hidden=mode!=='draw';$('finishPath').disabled=!draft||draft.points.length<2}
 function pointFromEvent(e){const rect=canvas.getBoundingClientRect();return {x:Math.max(0,Math.min(state.width,(e.clientX-rect.left)*state.width/rect.width)),y:Math.max(0,Math.min(state.height,(e.clientY-rect.top)*state.height/rect.height))}}
-function finishPath(){if(state.paths.length>=300){toast('最多支持 300 条路径，请先删除不需要的路径');return}if(!draft||draft.points.length<2){toast('至少点选起点和终点');return}checkpoint();const p={id:uid(),name:`路径 ${state.paths.length+1}`,points:clone(draft.points),smooth:false,color:current()?.color||'#b78a40',width:current()?.width||3,effect:current()?.effect||'arrows',direction:1,visible:true};state.paths.push(p);selectedId=p.id;draft=null;mode='select';syncAll();markChanged()}
+function finishPath(){if(state.paths.length>=300){toast('最多支持 300 条路径，请先删除不需要的路径');return}if(!draft||draft.points.length<2){toast('至少点选起点和终点');return}checkpoint();const p={id:uid(),name:`路径 ${state.paths.length+1}`,points:clone(draft.points),smooth:false,color:current()?.color||'#b78a40',width:current()?.width||3,effect:current()?.effect||'arrows',direction:1,visible:true,origin:'manual'};state.paths.push(p);selectedId=p.id;draft=null;mode='select';syncAll();markChanged()}
 function distanceToSegment(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy||1)));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy)}
 canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;const p=pointFromEvent(e);if(mode==='draw'){if(!draft)draft={points:[],color:current()?.color||'#b78a40',smooth:false};const last=draft.points.at(-1);if(!last||Math.hypot(p.x-last.x,p.y-last.y)>3/scale){if(draft.points.length>=1000){toast('每条路径最多 1000 个控制点');return}draft.points.push(p);}draft.preview=p;syncMode();return}const selected=current();if(selected&&!hideHandles&&selected.visible!==false){const i=selected.points.findIndex(q=>Math.hypot(q.x-p.x,q.y-p.y)<10/scale);if(i>=0){checkpoint();drag={id:selected.id,index:i};canvas.setPointerCapture(e.pointerId);stage.classList.add('dragging');return}}
   let best=null,dist=12/scale;for(const path of state.paths){if(path.visible===false)continue;const pts=getPathSamples(path);for(let i=1;i<pts.length;i++){const d=distanceToSegment(p,pts[i-1],pts[i]);if(d<dist){dist=d;best=path}}}selectedId=best?.id||null;renderPaths();syncSelection();});
@@ -67,7 +68,7 @@ document.querySelectorAll('[data-effect]').forEach(el=>el.onclick=()=>changePath
 $('pathColor').onchange=e=>changePath('color',e.target.value);$('pathWidth').onpointerdown=()=>{if(current())checkpoint()};$('pathWidth').oninput=e=>{const p=current();if(!p)return;p.width=+e.target.value;$('widthValue').textContent=`${p.width} px`;markChanged()};$('pathWidth').onkeydown=e=>{if(e.key.startsWith('Arrow'))checkpoint()};
 $('straightPath').onclick=()=>changePath('smooth',false);$('smoothPath').onclick=()=>changePath('smooth',true);$('reversePath').onclick=()=>{if(current())changePath('direction',current().direction===-1?1:-1)};
 $('deletePath').onclick=()=>{if(!current())return;checkpoint();state.paths=state.paths.filter(p=>p.id!==selectedId);selectedId=state.paths.at(-1)?.id;syncAll();markChanged()};
-$('duplicatePath').onclick=()=>{if(!current())return;if(state.paths.length>=300){toast('最多支持 300 条路径');return}checkpoint();const p=clone(current());p.id=uid();p.name+=' 副本';p.points=p.points.map(q=>({x:Math.min(state.width,q.x+18),y:Math.min(state.height,q.y+18)}));state.paths.push(p);selectedId=p.id;syncAll();markChanged()};
+$('duplicatePath').onclick=()=>{if(!current())return;if(state.paths.length>=300){toast('最多支持 300 条路径');return}checkpoint();const p=clone(current());p.id=uid();p.name+=' 副本';p.origin='manual';p.points=p.points.map(q=>({x:Math.min(state.width,q.x+18),y:Math.min(state.height,q.y+18)}));state.paths.push(p);selectedId=p.id;syncAll();markChanged()};
 for(const id of ['speed','spacing']){$(id).onpointerdown=checkpoint;$(id).onkeydown=e=>{if(e.key.startsWith('Arrow'))checkpoint()};$(id).oninput=e=>{state.settings[id]=+e.target.value;$(id+'Value').textContent=id==='speed'?`${e.target.value}×`:`${e.target.value} px`;markChanged()}}
 for(const id of ['showBase','glow'])$(id).onchange=e=>{checkpoint();state.settings[id]=e.target.checked;markChanged()};
 for(const id of ['exportWidth','fps','duration'])$(id).onchange=e=>{state.export[id==='exportWidth'?'width':id]=+e.target.value;if(id==='duration')state.settings.loopSeconds=+e.target.value;updateExportInfo();markChanged()};
@@ -78,7 +79,29 @@ $('loadDemo').onclick=()=>askReplace(()=>{checkpoint();restoreState(makeDemoStat
 $('uploadButton').onclick=()=>$('imageInput').click();
 function readFile(file,mode='data'){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('文件读取失败'));mode==='text'?reader.readAsText(file):reader.readAsDataURL(file)})}
 async function importImage(file){if(!file)return;try{if(file.size>20000000)throw Error('图片请控制在 20 MB 以内');if(!/\.(png|jpe?g|webp|svg)$/i.test(file.name))throw Error('请选择 PNG、JPG、WebP 或 SVG 图片');const src=await readFile(file),image=await loadImage(src);let w=image.naturalWidth,h=image.naturalHeight;if(!w||!h)throw Error('无法识别图片尺寸');const f=Math.min(1,6000/w,6000/h,Math.sqrt(24000000/(w*h)));w=Math.round(w*f);h=Math.round(h*f);if(w<100||h<100)throw Error('图片尺寸至少为 100 × 100 px');let data=src;if(f<1||file.name.toLowerCase().endsWith('.svg')){const c=document.createElement('canvas');c.width=w;c.height=h;const cctx=c.getContext('2d');cctx.fillStyle='#fff';cctx.fillRect(0,0,w,h);cctx.drawImage(image,0,0,w,h);data=c.toDataURL('image/png')}
-  askReplace(async()=>{checkpoint();const next={...clone(state),name:file.name.replace(/\.[^.]+$/,''),width:w,height:h,demo:false,backgroundColor:'#ffffff',backgroundData:data,paths:[]};await restoreState(next);setMode('draw');toast('底图已导入。沿连线点选路径，按 Enter 完成。')});}catch(err){toast(err.message)}}
+  askReplace(async()=>{checkpoint();const next={...clone(state),name:file.name.replace(/\.[^.]+$/,''),width:w,height:h,demo:false,backgroundColor:'#ffffff',backgroundData:data,paths:[]};await restoreState(next);try{await runAutoDetection({recordUndo:false})}catch(err){setMode('draw');toast('图片已导入。自动识别失败：'+err.message)}});}catch(err){toast(err.message)}}
+
+async function runAutoDetection({recordUndo=true}={}){
+  if(!backgroundImage||!state.backgroundData||detecting)return;
+  const sourceImage=backgroundImage,sourceData=state.backgroundData,sourceWidth=state.width,sourceHeight=state.height;
+  detecting=true;$('autoDetect').disabled=true;$('detectStatus').hidden=false;$('detectStatus').textContent='正在识别图片中的箭头…';
+  await new Promise(resolve=>requestAnimationFrame(()=>setTimeout(resolve,0)));
+  try{
+    const ratio=Math.min(1,1600/Math.max(sourceWidth,sourceHeight),Math.sqrt(2400000/(sourceWidth*sourceHeight)));
+    const c=document.createElement('canvas');c.width=Math.max(1,Math.round(sourceWidth*ratio));c.height=Math.max(1,Math.round(sourceHeight*ratio));
+    const cx=c.getContext('2d',{willReadFrequently:true});cx.fillStyle='#fff';cx.fillRect(0,0,c.width,c.height);cx.drawImage(sourceImage,0,0,c.width,c.height);
+    const suggestions=detectFlowPaths(cx.getImageData(0,0,c.width,c.height).data,c.width,c.height);
+    if(state.backgroundData!==sourceData||state.width!==sourceWidth||state.height!==sourceHeight)return;
+    if(recordUndo)checkpoint();
+    const retained=state.paths.filter(p=>p.origin!=='auto');const room=Math.max(0,300-retained.length);
+    const generated=suggestions.slice(0,room).map((s,i)=>({id:uid(),name:`自动连接 ${String(i+1).padStart(2,'0')}`,points:s.points.map(p=>({x:Math.round(p.x*sourceWidth/c.width*10)/10,y:Math.round(p.y*sourceHeight/c.height*10)/10})),smooth:false,color:'#e76e48',width:3,effect:'arrows',direction:1,visible:true,origin:'auto'}));
+    state.paths=[...retained,...generated];state.settings.showBase=false;selectedId=generated[0]?.id||retained[0]?.id||null;setMode(state.paths.length?'select':'draw');syncAll();markChanged();
+    toast(generated.length?`已自动识别 ${generated.length} 条流动路径。可拖动控制点修正。`:'未找到清晰的箭头。可沿连线手动点选路径。');
+    return generated.length;
+  }finally{detecting=false;$('autoDetect').disabled=false;if(state.backgroundData){const count=state.paths.filter(p=>p.origin==='auto').length;$('detectStatus').textContent=count?`已识别 ${count} 条流动路径 · 可逐条修正`:'未识别到箭头时，可手动描绘路径'}}
+}
+$('autoDetect').onclick=()=>runAutoDetection().catch(err=>toast('识别失败：'+err.message));
+
 $('imageInput').onchange=e=>{importImage(e.target.files[0]);e.target.value=''};
 window.addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('Files')){e.preventDefault();document.body.classList.add('drag-over')}});window.addEventListener('dragleave',e=>{if(!e.relatedTarget)document.body.classList.remove('drag-over')});window.addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('drag-over');if(e.dataTransfer.files[0])importImage(e.dataTransfer.files[0])});
 function fileName(ext){return (state.name||'lineflow').replace(/[\\/:*?"<>|]/g,'-')+'.'+ext}

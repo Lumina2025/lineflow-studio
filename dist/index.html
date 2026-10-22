@@ -11,13 +11,13 @@
 <aside class="leftbar">
   <section class="source-section"><div class="section-caption"><span>01 / 底图</span><span class="micro">从静态开始</span></div>
     <button id="uploadButton" class="upload-card"><span class="upload-symbol">＋</span><strong>导入你的流程图</strong><span>PNG、JPG、WebP、SVG</span></button>
-    <div id="sourceInfo" class="source-info">当前使用示例画布 · 1200 × 800</div>
+    <div id="sourceInfo" class="source-info">当前使用示例画布 · 1200 × 800</div><div id="detectStatus" class="detect-status" hidden></div><button id="autoDetect" class="auto-detect" hidden>✦ 重新识别箭头</button>
     <div class="two-buttons"><button id="loadDemo">使用示例</button><button id="blankCanvas">空白画布</button></div>
   </section>
   <section class="paths-section"><div class="section-caption"><span>02 / 流动路径</span><span id="pathCount" class="pill">0</span></div>
     <button id="newPath" class="add-path">＋ 新建路径 <kbd>P</kbd></button>
     <div id="pathList" class="path-list"></div>
-    <p class="path-help">点选路径以编辑。拖动控制点，可贴合底图中的连线。</p>
+    <p class="path-help">导入图片后会自动寻找连线与箭头；识别结果可拖动控制点修正。</p>
   </section>
   <div class="quick-guide"><span class="eyebrow">一个小提示</span><p>沿连线依次点选起点、拐点和终点，按 <kbd>Enter</kbd> 完成。箭头会顺着绘制方向流动。</p><span class="privacy-dot"></span><small>图片处理和 GIF 导出均在浏览器内完成</small></div>
 </aside>
