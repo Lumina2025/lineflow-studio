@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f4f3ef"><meta name="description" content="给流程图加上流动的箭头、光点和虚线，在浏览器里导出循环 GIF。"><title>Lineflow · 让连线流动起来</title><link rel="stylesheet" href="./style.css"></head>
+<body>
+<header class="topbar">
+  <a class="brand" href="./" aria-label="Lineflow 首页"><span class="brand-icon">↝</span>lineflow<span class="brand-label">动线工作室</span></a>
+  <div class="project-meta"><input id="projectName" aria-label="项目名称" value="Agent 工作流"><span id="saveStatus"><i></i> 已保存在此浏览器</span></div>
+  <div class="header-actions"><button id="saveProject" class="quiet">保存工程</button><button id="openProject" class="quiet">打开工程</button><button id="exportTop" class="primary">导出 GIF <span>↗</span></button></div>
+</header>
+<div class="workspace">
+<aside class="leftbar">
+  <section class="source-section"><div class="section-caption"><span>01 / 底图</span><span class="micro">从静态开始</span></div>
+    <button id="uploadButton" class="upload-card"><span class="upload-symbol">＋</span><strong>导入你的流程图</strong><span>PNG、JPG、WebP、SVG</span></button>
+    <div id="sourceInfo" class="source-info">当前使用示例画布 · 1200 × 800</div>
+    <div class="two-buttons"><button id="loadDemo">使用示例</button><button id="blankCanvas">空白画布</button></div>
+  </section>
+  <section class="paths-section"><div class="section-caption"><span>02 / 流动路径</span><span id="pathCount" class="pill">0</span></div>
+    <button id="newPath" class="add-path">＋ 新建路径 <kbd>P</kbd></button>
+    <div id="pathList" class="path-list"></div>
+    <p class="path-help">点选路径以编辑。拖动控制点，可贴合底图中的连线。</p>
+  </section>
+  <div class="quick-guide"><span class="eyebrow">一个小提示</span><p>沿连线依次点选起点、拐点和终点，按 <kbd>Enter</kbd> 完成。箭头会顺着绘制方向流动。</p><span class="privacy-dot"></span><small>图片处理和 GIF 导出均在浏览器内完成</small></div>
+</aside>
+<main class="editor">
+  <div class="canvas-toolbar"><div class="tool-group"><button id="selectTool" class="tool active" title="选择和移动控制点 (V)"><span>↖</span> 选择 <kbd>V</kbd></button><button id="drawTool" class="tool" title="绘制路径 (P)"><span>⌁</span> 画路径 <kbd>P</kbd></button><span class="separator"></span><button id="undo" class="icon-button" title="撤销 (⌘Z)" aria-label="撤销">↶</button><button id="redo" class="icon-button" title="重做 (⌘⇧Z)" aria-label="重做">↷</button></div>
+    <div class="zoom-group"><button id="zoomOut" aria-label="缩小">−</button><button id="zoomFit" title="适应画布">适应</button><span id="zoomLabel">100%</span><button id="zoomIn" aria-label="放大">＋</button></div>
+  </div>
+  <div class="canvas-stage" id="stage"><div id="canvasWrap" class="canvas-wrap"><canvas id="canvas" aria-label="动画编辑画布；按 P 画路径，按 V 选择路径"></canvas></div></div>
+  <div class="draw-notice" id="drawNotice" hidden><span><b>绘制中</b> · 点击添加拐点，Enter 完成，Esc 取消</span><button id="finishPath">完成路径 ↵</button></div>
+  <footer class="preview-bar"><button id="playPause" class="play-button" title="播放 / 暂停（空格）">Ⅱ</button><div class="play-info"><strong id="playState">实时预览</strong><span id="loopLabel">3 秒无缝循环</span></div><div class="timeline"><div id="timelineProgress"></div></div><span class="live-badge"><i></i> LIVE</span><button id="toggleHandles" class="quiet" aria-pressed="false">隐藏编辑点</button></footer>
+  <div class="editor-footnote"><span>静止的图，流动的想法。</span><span>路径手动描绘 · 支持曲线 · 无限循环</span></div>
+</main>
+<aside class="rightbar">
+  <section class="properties"><div class="section-caption"><span>03 / 动起来</span><span class="orange-dot"></span></div>
+  <div id="emptySelection" class="empty-selection">选择一条路径，调整它的流动效果。</div>
+  <div id="pathProperties">
+    <label class="field-label" for="pathName">路径名称</label><input id="pathName" class="text-field" maxlength="50">
+    <label class="field-label">流动样式</label><div class="effect-options"><button data-effect="arrows"><b>➜</b><span>箭头</span></button><button data-effect="dots"><b>•••</b><span>光点</span></button><button data-effect="dashes"><b>╌╌╌</b><span>虚线</span></button></div>
+    <div class="field-line"><label for="pathColor">路径颜色</label><div class="color-field"><input type="color" id="pathColor" value="#b78a40"><span id="colorHex">#B78A40</span></div></div>
+    <div class="swatches" aria-label="预设颜色"><button data-color="#b78a40" style="--swatch:#b78a40" title="暖金色"></button><button data-color="#ee6b42" style="--swatch:#ee6b42" title="橙色"></button><button data-color="#19354b" style="--swatch:#19354b" title="深蓝色"></button><button data-color="#2a9d8f" style="--swatch:#2a9d8f" title="青绿色"></button><button data-color="#7691d5" style="--swatch:#7691d5" title="蓝色"></button><button data-color="#ffffff" style="--swatch:#ffffff" title="白色"></button></div>
+    <label class="slider-label" for="pathWidth"><span>线条粗细</span><output id="widthValue">3 px</output></label><input type="range" id="pathWidth" min="1" max="10" step="0.5" value="3">
+    <div class="field-line"><span>路径形状</span><div class="segmented"><button id="straightPath">折线</button><button id="smoothPath">曲线</button></div></div>
+    <button id="reversePath" class="full-button">⇄ 反转流动方向</button>
+    <div class="two-buttons path-actions"><button id="duplicatePath">复制路径</button><button id="deletePath" class="danger-text">删除路径</button></div>
+  </div></section>
+  <section class="motion-settings"><div class="section-caption"><span>全局动画</span></div>
+    <label class="slider-label" for="speed"><span>流动速度</span><output id="speedValue">3×</output></label><input type="range" id="speed" min="1" max="8" step="1" value="3">
+    <label class="slider-label" for="spacing"><span>粒子间距</span><output id="spacingValue">80 px</output></label><input type="range" id="spacing" min="24" max="180" step="4" value="80">
+    <label class="switch-row"><span>显示静态轨道</span><input type="checkbox" id="showBase" checked role="switch"></label>
+    <label class="switch-row"><span>柔和发光</span><input type="checkbox" id="glow" role="switch"></label>
+  </section>
+  <section class="export-settings"><div class="section-caption"><span>导出设置</span><span class="micro">GIF · 循环播放</span></div>
+    <div class="field-line"><label for="exportWidth">画面宽度</label><select id="exportWidth"><option value="640">640 px</option><option value="960" selected>960 px</option><option value="1200">1200 px</option><option value="1600">1600 px</option></select></div>
+    <div class="two-fields"><label>循环时长<select id="duration"><option value="2">2 秒</option><option value="3" selected>3 秒</option><option value="4">4 秒</option><option value="6">6 秒</option></select></label><label>帧率<select id="fps"><option value="12">12 fps</option><option value="20" selected>20 fps</option><option value="25">25 fps</option></select></label></div>
+    <p id="exportEstimate" class="export-estimate"></p><button id="exportGif" class="primary full">导出 GIF <span>↗</span></button><button id="exportPng" class="text-button">另存当前画面为 PNG</button>
+  </section>
+</aside>
+</div>
+<input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden><input id="projectInput" type="file" accept=".json,application/json" hidden>
+<dialog id="exportDialog"><div class="dialog-icon">↝</div><h2 id="exportTitle">正在制作你的 GIF</h2><p id="exportDetail">准备画布…</p><progress id="exportProgress" max="100" value="0"></progress><p class="dialog-small">请保持页面打开。图片不会上传到服务器。</p><div id="exportResult" hidden><img id="exportPreview" alt="导出的 GIF 预览"><a id="downloadGif" class="primary" download="lineflow.gif">下载 GIF ↓</a></div><button id="cancelExport" class="full-button">取消</button></dialog>
+<dialog id="replaceDialog"><h2>替换当前画布？</h2><p>当前路径会被清空。可先「保存工程」，或替换后用撤销恢复。</p><div class="dialog-actions"><button id="keepCanvas">取消</button><button id="confirmReplace" class="primary">替换画布</button></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="./app.js"></script>
+</body></html>
