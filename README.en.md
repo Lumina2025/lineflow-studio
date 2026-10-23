@@ -2,6 +2,8 @@
 
 Animate connections in an existing flowchart, architecture diagram or mind map, then export a seamlessly looping GIF.
 
+Try it online: [English](https://lineflow-studio-zilliz-oct22.shuhongwang2024.chatgpt.site/?lang=en) · [中文](https://lineflow-studio-zilliz-oct22.shuhongwang2024.chatgpt.site/)
+
 ## Use it
 
 1. Import a PNG, JPG, WebP or SVG image, or drag one onto the editor.

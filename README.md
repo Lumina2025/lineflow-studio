@@ -4,6 +4,8 @@
 
 页面右上角可切换中英文；[英文版说明](README.en.md)。英文界面也可直接通过站点的 `?lang=en` 链接打开。
 
+在线体验：[中文版](https://lineflow-studio-zilliz-oct22.shuhongwang2024.chatgpt.site/) · [English](https://lineflow-studio-zilliz-oct22.shuhongwang2024.chatgpt.site/?lang=en)
+
 ## 使用
 
 1. 点「导入你的流程图」，选 PNG、JPG、WebP 或 SVG；也可以拖入图片。
