@@ -122,6 +122,24 @@ function icon(ctx, type, x, y, color) {
   ctx.restore();
 }
 
+let demoLanguage='zh';
+export function setDemoLanguage(lang){demoLanguage=lang==='en'?'en':'zh'}
+const demoText=(zh,en)=>demoLanguage==='en'?en:zh;
+const demoPathNames=[
+  ['用户输入 → Agent','User request → Agent'],
+  ['知识检索 → Agent','Knowledge search → Agent'],
+  ['Agent → 推理规划','Agent → Reason & plan'],
+  ['Agent → 工具调用','Agent → Tools'],
+  ['工具 → 应用','Tools → Applications'],
+  ['Agent → 执行交付','Agent → Delivery'],
+  ['Agent → 记忆','Agent → Memory']
+];
+export function localizeDemoState(state,lang){
+  if(!state.demo)return;
+  if(['Agent 工作流','Agent workflow'].includes(state.name))state.name=lang==='en'?'Agent workflow':'Agent 工作流';
+  for(const path of state.paths)for(const [zh,en] of demoPathNames)if(path.name===zh||path.name===en){path.name=lang==='en'?en:zh;break}
+}
+
 function demoBackground(ctx, width, height) {
   ctx.save(); ctx.scale(width / 1200, height / 800);
   for (let y = 112; y < 730; y += 24) for (let x = 40; x < 1180; x += 24) circle(ctx, x, y, .65, '#e2e2dd');
@@ -131,7 +149,7 @@ function demoBackground(ctx, width, height) {
   label(ctx, '07 NODES  /  07 CONNECTIONS', 1158, 42, 11, '#878d86', 500, 'right');
   ctx.beginPath(); ctx.moveTo(40, 745); ctx.lineTo(1160, 745); ctx.strokeStyle = '#e4e6df'; ctx.lineWidth = 1; ctx.stroke();
   label(ctx, 'Animated connection paths', 40, 775, 12, '#7b827b', 500);
-  label(ctx, '让每一条连接，流动起来', 212, 775, 12, '#9a9e96', 400);
+  label(ctx, demoText('让每一条连接，流动起来','Make every connection flow'), 212, 775, 12, '#9a9e96', 400);
   label(ctx, 'LINEFLOW  /  01', 1160, 775, 11, '#848b82', 550, 'right');
   ctx.restore();
 }
@@ -153,12 +171,12 @@ function demoNode(ctx, { x, y, width = 230, height = 120, title, subtitle, type,
 
 function demoForeground(ctx, width, height) {
   ctx.save(); ctx.scale(width / 1200, height / 800);
-  demoNode(ctx, { x: 100, y: 130, title: 'Knowledge', subtitle: '检索知识', type: 'knowledge', tag: 'Documents · Vector search', accent: '#b49a4b' });
-  demoNode(ctx, { x: 80, y: 350, title: 'User request', subtitle: '用户输入', type: 'user', tag: 'A question. A new possibility.', accent: '#b3855f' });
-  demoNode(ctx, { x: 485, y: 80, title: 'Reason & plan', subtitle: '推理与规划', type: 'reasoning', tag: 'Think · Break down · Decide', accent: '#b99946' });
-  demoNode(ctx, { x: 870, y: 130, title: 'Tools', subtitle: '工具调用', type: 'tools', tag: 'Search · Code · APIs', accent: '#bf8157' });
-  demoNode(ctx, { x: 870, y: 540, title: 'Applications', subtitle: '执行与交付', type: 'apps', tag: 'The right action, delivered.', accent: '#5f977c' });
-  demoNode(ctx, { x: 485, y: 580, title: 'Memory', subtitle: '上下文记忆', type: 'memory', tag: 'Remember · Retrieve · Improve', accent: '#729278' });
+  demoNode(ctx, { x: 100, y: 130, title: 'Knowledge', subtitle: demoText('检索知识','Search knowledge'), type: 'knowledge', tag: 'Documents · Vector search', accent: '#b49a4b' });
+  demoNode(ctx, { x: 80, y: 350, title: 'User request', subtitle: demoText('用户输入','User input'), type: 'user', tag: 'A question. A new possibility.', accent: '#b3855f' });
+  demoNode(ctx, { x: 485, y: 80, title: 'Reason & plan', subtitle: demoText('推理与规划','Plan the next step'), type: 'reasoning', tag: 'Think · Break down · Decide', accent: '#b99946' });
+  demoNode(ctx, { x: 870, y: 130, title: 'Tools', subtitle: demoText('工具调用','Use tools'), type: 'tools', tag: 'Search · Code · APIs', accent: '#bf8157' });
+  demoNode(ctx, { x: 870, y: 540, title: 'Applications', subtitle: demoText('执行与交付','Take action'), type: 'apps', tag: 'The right action, delivered.', accent: '#5f977c' });
+  demoNode(ctx, { x: 485, y: 580, title: 'Memory', subtitle: demoText('上下文记忆','Keep context'), type: 'memory', tag: 'Remember · Retrieve · Improve', accent: '#729278' });
 
   ctx.shadowColor = 'rgba(22,49,47,.18)'; ctx.shadowBlur = 28; ctx.shadowOffsetY = 10;
   roundedRect(ctx, 482, 310, 236, 160, 22); ctx.fillStyle = '#203c3b'; ctx.fill();
@@ -166,7 +184,7 @@ function demoForeground(ctx, width, height) {
   circle(ctx, 600, 347, 20, '#304f49');
   icon(ctx, 'reasoning', 600, 347, '#edc878');
   label(ctx, 'AI Agent', 600, 400, 27, '#ffffff', 650, 'center');
-  label(ctx, '感知  ·  思考  ·  行动', 600, 426, 12, '#adc5b9', 400, 'center');
+  label(ctx, demoText('感知  ·  思考  ·  行动','Perceive  ·  Think  ·  Act'), 600, 426, 12, '#adc5b9', 400, 'center');
   circle(ctx, 574, 449, 2.7, '#d8bf76');
   label(ctx, 'IN MOTION', 584, 453, 9, '#d8cfb2', 550);
   ctx.restore();
@@ -271,18 +289,18 @@ export function renderScene(ctx, state, phase = 0, { backgroundImage = null, edi
   ctx.restore();
 }
 
-export function makeDemoState() {
+export function makeDemoState(lang=demoLanguage) {
   const path = (id, name, points, color, effect = 'arrows') => ({ id, name, points: points.map(([x, y]) => ({ x, y })), smooth: true, color, width: 3, effect, direction: 1, visible: true });
   return {
-    version: 1, width: 1200, height: 800, name: 'Agent 工作流', demo: true, backgroundColor: '#f8f9f3', backgroundData: null,
+    version: 1, width: 1200, height: 800, name: lang==='en'?'Agent workflow':'Agent 工作流', demo: true, backgroundColor: '#f8f9f3', backgroundData: null,
     paths: [
-      path('request', '用户输入 → Agent', [[310, 410], [390, 410], [410, 390], [482, 390]], '#bd9568'),
-      path('knowledge', '知识检索 → Agent', [[330, 190], [385, 190], [385, 310], [420, 340], [482, 340]], '#c2a55c'),
-      path('reason', 'Agent → 推理规划', [[600, 310], [600, 200]], '#bca052'),
-      path('tools', 'Agent → 工具调用', [[718, 350], [765, 350], [790, 310], [790, 210], [825, 190], [870, 190]], '#ca9264'),
-      path('tool-result', '工具 → 应用', [[985, 250], [985, 540]], '#c1976f', 'dashes'),
-      path('delivery', 'Agent → 执行交付', [[718, 430], [765, 430], [790, 470], [790, 565], [825, 600], [870, 600]], '#719e83'),
-      path('memory', 'Agent → 记忆', [[600, 470], [600, 580]], '#8ba079', 'dots')
+      path('request', demoPathNames[0][lang==='en'?1:0], [[310, 410], [390, 410], [410, 390], [482, 390]], '#bd9568'),
+      path('knowledge', demoPathNames[1][lang==='en'?1:0], [[330, 190], [385, 190], [385, 310], [420, 340], [482, 340]], '#c2a55c'),
+      path('reason', demoPathNames[2][lang==='en'?1:0], [[600, 310], [600, 200]], '#bca052'),
+      path('tools', demoPathNames[3][lang==='en'?1:0], [[718, 350], [765, 350], [790, 310], [790, 210], [825, 190], [870, 190]], '#ca9264'),
+      path('tool-result', demoPathNames[4][lang==='en'?1:0], [[985, 250], [985, 540]], '#c1976f', 'dashes'),
+      path('delivery', demoPathNames[5][lang==='en'?1:0], [[718, 430], [765, 430], [790, 470], [790, 565], [825, 600], [870, 600]], '#719e83'),
+      path('memory', demoPathNames[6][lang==='en'?1:0], [[600, 470], [600, 580]], '#8ba079', 'dots')
     ],
     settings: { speed: 3, spacing: 80, glow: false, showBase: true, loopSeconds: 3 },
     export: { width: 960, fps: 20, duration: 3 }

@@ -128,9 +128,9 @@ function pathKey(points){
 }
 
 /** @param {Uint8ClampedArray|Uint8Array} rgba RGBA pixels in row-major order */
-export function detectFlowPaths(rgba,width,height,{maxPaths=80}={}){
-  if(!rgba||!Number.isInteger(width)||!Number.isInteger(height)||width<40||height<40||rgba.length<width*height*4)throw Error('识别画面数据无效');
-  if(width*height>4000000)throw Error('识别画面过大，请先缩小图片');
+export function detectFlowPaths(rgba,width,height,{maxPaths=80,lang='zh'}={}){
+  if(!rgba||!Number.isInteger(width)||!Number.isInteger(height)||width<40||height<40||rgba.length<width*height*4)throw Error(lang==='en'?'Invalid image data for arrow detection.':'识别画面数据无效');
+  if(width*height>4000000)throw Error(lang==='en'?'Image is too large for detection. Please resize it.':'识别画面过大，请先缩小图片');
   const mask=inkMask(rgba,width,height),suggestions=[];
   for(const direction of ['down','right','up','left']){
     const view=oriented(mask,width,height,direction);
